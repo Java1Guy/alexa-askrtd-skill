@@ -1,0 +1,68 @@
+{
+  "intents": [
+    {
+      "intent": "FindStop",
+      "slots": [
+        {
+          "name": "Address",
+          "type": "AMAZON.PostalAddress"
+        }
+      ]
+    },
+    {
+      "intent": "DistanceToStop"
+    },
+    {
+      "intent": "SetLocation",
+      "slots": [
+        {
+          "name": "MyLatInt",
+          "type": "AMAZON.NUMBER"
+        },
+        {
+          "name": "MyLatFrac",
+          "type": "AMAZON.NUMBER"
+        },
+        {
+          "name": "MyLonInt",
+          "type": "AMAZON.NUMBER"
+        },
+        {
+          "name": "MyLonFrac",
+          "type": "AMAZON.NUMBER"
+        }
+      ]
+
+    },
+    {
+      "intent": "FindNextBus"
+    },
+    {
+      "intent": "CheckAlerts",
+      "slots": [
+        {
+          "name": "Route",
+          "type": "LIST_OF_ROUTES"
+        }
+      ]
+    },
+    {
+      "intent": "FindBus",
+      "slots": [
+        {
+          "name": "Route",
+          "type": "LIST_OF_ROUTES"
+        }
+      ]
+    },
+    {
+      "intent": "AMAZON.StopIntent"
+    },
+    {
+      "intent": "AMAZON.CancelIntent"
+    },
+    {
+      "intent": "AMAZON.HelpIntent"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+
+FindStop what is my closest stop
+FindStop what is the stop nearest {Address}
+
+FindBus where is the nearest {Route}
+
+DistanceToStop how far is my closest stop
+
+SetLocation make my location as {MyLatInt} dot {MyLatFrac} {MyLonInt} dot {MyLonFrac}
+
+FindNextBus when is the next bus
+
+CheckAlerts are there any alerts on the {Route} bus

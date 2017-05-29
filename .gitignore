@@ -4,3 +4,6 @@
 .idea/**
 target/**
 src/main/resources/keys.properties
+project/build.properties
+project/project
+project/target

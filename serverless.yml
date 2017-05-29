@@ -20,12 +20,11 @@ service: askrtd
 provider:
   name: aws
   runtime: java8
-  # role: arn:aws:iam::792730539207:role/Lambda-ML-DynamoDB
+  # role: arn:aws:iam::792730539207:role/Lambda
   memorySize: 1024
-  apiKeys:
-    # - RunFraudPredictML4S-${opt:stage}
-  # deploymentBucket: 47lining-devops
-  # deploymentBucket: colonyml
+  #apiKeys:
+    # - ApiKey-${opt:stage}
+  # deploymentBucket: peopledesigned-askrtd
 
 # you can overwrite defaults here
 #  stage: dev
@@ -62,8 +61,7 @@ package:
 
 functions:
   alexa:
-    handler: com.peopledesigned.askrtd.AskrtdSpeechletRequestStreamHandler
-
+    handler: com.peopledesigned.askrtd.AskrtdSpeechletRequestStreamHandler::handleRequest
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details
@@ -72,9 +70,6 @@ functions:
 
 #    Define function environment variables here
     environment:
-      TIMEOUT: 0.5
-      ML_ENDPOINT: https://realtime.machinelearning.us-east-1.amazonaws.com
-      ML_MODEL_ID: ml-GAFOUksbin9
       STAGE: ${opt:stage}
 
 # you can add CloudFormation resource templates here

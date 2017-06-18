@@ -1,9 +1,13 @@
 **/*ipr
 **/*iws
 .private/**
+.serverless/**
 .idea/**
 target/**
+venv/**
 src/main/resources/keys.properties
 project/build.properties
 project/project
 project/target
+attic/*
+data/*

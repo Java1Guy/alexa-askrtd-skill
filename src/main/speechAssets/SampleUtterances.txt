@@ -1,6 +1,8 @@
 
 FindStop what is my closest stop
+FindStop what is the stop nearest me
 FindStop what is the stop nearest {Address}
+FindStop what is the closest stop to {Address}
 
 FindBus where is the nearest {Route}
 

@@ -46,6 +46,17 @@ object ResponseHelper {
   }
 
   /**
+    * Creates a {@code SpeechletResponse} for the GetAddress intent.
+    *
+    * @return SpeechletResponse spoken and visual response for the given intent
+    */
+  def getTellResponse(speechText: String) = {
+    val card = getSimpleCard(ADDRESS_CARD_TITLE, speechText)
+    val speech = getPlainTextOutputSpeech(speechText)
+    SpeechletResponse.newTellResponse(speech, card)
+  }
+
+  /**
     * Creates a {@code SpeechletResponse} for permission requests.
     *
     * @return SpeechletResponse spoken and visual response for the given intent

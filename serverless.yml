@@ -22,6 +22,7 @@ provider:
   runtime: java8
   # role: arn:aws:iam::792730539207:role/Lambda
   memorySize: 1024
+  profile: pds
   #apiKeys:
     # - ApiKey-${opt:stage}
   # deploymentBucket: peopledesigned-askrtd
@@ -61,16 +62,14 @@ package:
 
 functions:
   alexa:
-    handler: com.peopledesigned.askrtd.AskrtdSpeechletRequestStreamHandler::handleRequest
+    handler: com.peopledesigned.askrtd.AskrtdSpeechletRequestStreamHandler
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details
     events:
       - alexaSkill
-
-#    Define function environment variables here
-    environment:
-      STAGE: ${opt:stage}
+#    environment:
+#      ALEXA_API_KEY: ${opt:api-key}
 
 # you can add CloudFormation resource templates here
 #resources:

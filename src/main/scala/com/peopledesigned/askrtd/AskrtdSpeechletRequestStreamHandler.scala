@@ -1,9 +1,8 @@
 package com.peopledesigned.askrtd
 
+import scala.collection.JavaConverters._
 import com.amazon.speech.speechlet.lambda.SpeechletRequestStreamHandler
 import com.peopledesigned.askrtd.util.Properties
-
-import collection.JavaConverters._
 
 /**
   * Created by mchance on 5/29/17.

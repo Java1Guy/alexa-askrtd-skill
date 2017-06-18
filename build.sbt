@@ -1,3 +1,6 @@
+import sbt.Keys._
+import sbt._
+//import sbtrelease.Version
 import sbtprotobuf.{ProtobufPlugin=>PB}
 
 PB.protobufSettings
@@ -17,6 +20,12 @@ scalaVersion := "2.12.2"
 name := "askrtd"
 organization := "com.peopledesigned"
 version := "1.0"
+
+resolvers += Resolver.sonatypeRepo("public")
+
+//releaseNextVersion := { ver => Version(ver).map(_.bumpMinor.string).getOrElse("Error") }
+
+assemblyJarName in assembly := "askrtd.jar"
 
 // Note, it's not required for you to define these three settings. These are
 // mostly only necessary if you intend to publish your library's binaries on a

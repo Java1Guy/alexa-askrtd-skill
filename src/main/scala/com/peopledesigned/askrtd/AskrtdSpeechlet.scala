@@ -4,8 +4,9 @@ import com.amazon.speech.json.SpeechletRequestEnvelope
 import com.amazon.speech.speechlet._
 import com.peopledesigned.askrtd.device.DeviceClient
 import com.peopledesigned.askrtd.model.{DeviceAddressClientException, UnauthorizedException}
-import com.peopledesigned.askrtd.util.ResponseHelper._
+import com.peopledesigned.askrtd.util.ResponseHelper.{getAskResponse, _}
 import org.slf4j.LoggerFactory
+import com.peopledesigned.askrtd.intent.ProcessIntent
 
 class AskrtdSpeechlet extends SpeechletV2 {
   private val log = LoggerFactory.getLogger(classOf[AskrtdSpeechlet])
@@ -35,20 +36,18 @@ class AskrtdSpeechlet extends SpeechletV2 {
   }
 
   override def onLaunch(requestEnvelope: SpeechletRequestEnvelope[LaunchRequest]): SpeechletResponse = {
+    log.info(">>> onLaunch")
 //    A LaunchRequest always starts a new session.
 //    val response: SpeechletResponse = new SpeechletResponse
     // Get device address -- save in session? or device ID?
 
-    val consentToken = requestEnvelope.getSession.getUser.getPermissions.getConsentToken
-    if (consentToken == null) {
-      log.info("The user hasn't authorized the skill. Sending a permissions card.")
-      return getPermissionsResponse
-    }
     try {
       val systemState = getSystemState(requestEnvelope.getContext)
       val deviceId = systemState.getDevice.getDeviceId
       val apiEndpoint = systemState.getApiEndpoint
-      val alexaDeviceAddressClient = new DeviceClient(deviceId, consentToken, apiEndpoint)
+      val (consentToken, response) = getLaunchConsentOrResponse(requestEnvelope)
+      if (consentToken.isEmpty) return response.get
+      val alexaDeviceAddressClient = new DeviceClient(deviceId, consentToken.get, apiEndpoint)
       val addressObject = alexaDeviceAddressClient.getFullAddress
       if (addressObject == null) return getAskResponse(ADDRESS_CARD_TITLE, ERROR_TEXT)
       return getAddressResponse(addressObject)
@@ -70,43 +69,68 @@ class AskrtdSpeechlet extends SpeechletV2 {
     val sessionId = session.getSessionId
     log.info(s"onIntent $requestId, $sessionId")
     val intent = intentRequest.getIntent
-    val intentName = getIntentName(intent)
+    ProcessIntent.handleIntent(intent)
+  }
 
-    log.info("Intent received: {}", intentName)
+  def getLaunchConsentOrResponse(requestEnvelope: SpeechletRequestEnvelope[LaunchRequest]): (Option[String], Option[SpeechletResponse]) = {
+    val session = requestEnvelope.getSession
+    if (session == null) {
+      log.info("There is no session.")
+      return (None, Some(getAskResponse(ADDRESS_CARD_TITLE, WELCOME_TEXT)))
+    }
+    log.info("Have session, getting user.")
+    getConsentOrResponse(session)
+  }
 
-    // We want to handle each intent differently here, so that we can give each a unique response.
-    // Refer to the Interaction Model for more information:
-    // https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/alexa-skills-kit-interaction-model-reference
-    intentName match { // This is the custom intent that delivers the main functionality of the sample skill.
-      // Refer to speechAssets/SampleUtterances for examples that would trigger this.
-      case "GetAddress" =>
-        val consentToken = session.getUser.getPermissions.getConsentToken
-        if (consentToken == null) {
-          log.info("The user hasn't authorized the skill. Sending a permissions card.")
-          return getPermissionsResponse
-        }
-        try {
-          val systemState = getSystemState(requestEnvelope.getContext)
-          val deviceId = systemState.getDevice.getDeviceId
-          val apiEndpoint = systemState.getApiEndpoint
-          val alexaDeviceAddressClient = new DeviceClient(deviceId, consentToken, apiEndpoint)
-          val addressObject = alexaDeviceAddressClient.getFullAddress
-          if (addressObject == null) return getAskResponse(ADDRESS_CARD_TITLE, ERROR_TEXT)
-          getAddressResponse(addressObject)
-        } catch {
-          case e: UnauthorizedException =>
-            getPermissionsResponse
-          case e: DeviceAddressClientException =>
-            log.error("Device Address Client failed to successfully return the address.", e)
-            getAskResponse(ADDRESS_CARD_TITLE, ERROR_TEXT)
-        }
-      // This is one of the many Amazon built in intents.
-      // Refer to the following for a list of all available built in intents:
-      // https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/built-in-intent-ref/standard-intents
-      case "AMAZON.HelpIntent" =>
-        getAskResponse(ADDRESS_CARD_TITLE, HELP_TEXT)
-      case _ =>
-        getAskResponse(ADDRESS_CARD_TITLE, UNHANDLED_TEXT)
+  def getIntentConsentOrResponse(requestEnvelope: SpeechletRequestEnvelope[IntentRequest]): (Option[String], Option[SpeechletResponse]) = {
+    val session = requestEnvelope.getSession
+    if (session == null) {
+      log.info("There is no session.")
+      return (None, Some(getAskResponse(ADDRESS_CARD_TITLE, WELCOME_TEXT)))
+    }
+    log.info("Have session, getting user.")
+    getConsentOrResponse(session)
+  }
+  def getConsentOrResponse(session: Session): (Option[String], Option[SpeechletResponse]) = {
+    val user = session.getUser
+    if (user == null) {
+      log.info("There is no user.")
+      return (None, Some(getAskResponse(ADDRESS_CARD_TITLE, WELCOME_TEXT)))
+    }
+    log.info("Have user, getting permissions.")
+    val permissions = user.getPermissions
+    if (permissions == null) {
+      log.info("The user hasn't authorized the skill. Sending a permissions card.")
+      return (None, Some(getPermissionsResponse))
+    }
+    log.info("Have permissions, getting consent.")
+    val consentToken = permissions.getConsentToken
+    if (consentToken == null) {
+      log.info("The user hasn't authorized the skill. Sending a permissions card.")
+      return (None, Some(getPermissionsResponse))
+    }
+    (Some(consentToken), None)
+  }
+  def getAddress(session: Session, requestEnvelope: SpeechletRequestEnvelope[IntentRequest]): SpeechletResponse = {
+    val consentToken = getConsentOrResponse(session)
+    if (consentToken._1.isEmpty) {
+      log.info("The user hasn't authorized the skill. Sending a permissions card.")
+      return consentToken._2.getOrElse(getPermissionsResponse)
+    }
+    try {
+      val systemState = getSystemState(requestEnvelope.getContext)
+      val deviceId = systemState.getDevice.getDeviceId
+      val apiEndpoint = systemState.getApiEndpoint
+      val alexaDeviceAddressClient = new DeviceClient(deviceId, consentToken._1.get, apiEndpoint)
+      val addressObject = alexaDeviceAddressClient.getFullAddress
+      if (addressObject == null) return getAskResponse(ADDRESS_CARD_TITLE, ERROR_TEXT)
+      getAddressResponse(addressObject)
+    } catch {
+      case e: UnauthorizedException =>
+        getPermissionsResponse
+      case e: DeviceAddressClientException =>
+        log.error("Device Address Client failed to successfully return the address.", e)
+        getAskResponse(ADDRESS_CARD_TITLE, ERROR_TEXT)
     }
   }
 }
